@@ -13,7 +13,7 @@ router.post('/tasks', auth, async (req, res) => {
         await task.save()
         res.status(201).send(task)
     } catch(error) {
-            res.status(400).send(error)
+            res.status(400).send(error.message)
     }
 })
 
@@ -52,7 +52,7 @@ router.get('/tasks', auth, async (req, res) => {
         })
         res.status(200).send(req.user.tasks)
     } catch(e){
-        res.status(500).send(e)
+        res.status(500).send(e.message)
     }
 })
 

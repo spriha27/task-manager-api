@@ -1,6 +1,5 @@
 const express = require('express')
 const multer = require('multer')
-// const sharp = require('sharp')
 const User = require('../models/user.js')
 const auth = require('../middleware/auth')
 const { TopologyDescription } = require('mongodb')
@@ -14,7 +13,7 @@ router.post('/users', async (req, res) => {
         const token = await user.generateAuthToken()
         res.status(201).send({user, token})
     } catch(error){
-        res.status(400).send(error)
+        res.status(400).send(error.message)
     }
 })
 
@@ -25,21 +24,21 @@ router.post('/users/login', async(req, res) => {
         const token = await user.generateAuthToken()
         res.send({user, token})
     } catch(e){
-        res.status(400).send(e)
+        res.status(400).send(e.message)
     }
 })
 
-router.post('/users/logout', auth, async(req, res) => {
+router.post('/users/logoutAll', auth, async(req, res) => {
     try{
         req.user.tokens = []
         await req.user.save()
         res.send()
     } catch(e) {
-        res.status(500).send(e)
+        res.status(500).send(e.message)
     }
 })
 
-router.post('/users/logoutAll', auth, async(req, res) => {
+router.post('/users/logout', auth, async(req, res) => {
     try{
         req.user.tokens = req.user.tokens.filter((token) => {
             return token.token != req.token
@@ -47,7 +46,7 @@ router.post('/users/logoutAll', auth, async(req, res) => {
         await req.user.save()
         res.send()
     } catch(e) {
-        res.status(500).send(e)
+        res.status(500).send(e.message)
     }
 })
 
@@ -69,7 +68,7 @@ router.patch('/users/me', auth, async(req, res) => {
         await req.user.save()
         res.status(200).send(req.user)
     } catch(e) {
-        res.status(400).send(e)
+        res.status(400).send(e.message)
     }
 })
 
@@ -82,13 +81,13 @@ router.delete('/users/me', auth, async (req, res) => {
         await req.user.remove();
         res.send(req.user)
     } catch(e) {
-        res.status(500).send(e)
+        res.status(500).send(e.message)
     }
 })
 
 const upload = multer({
     limits: {
-        fileSize: 1000000,
+        fileSize: 2 * 1024 * 1024,
     },
     fileFilter(req, file, cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
@@ -113,18 +112,18 @@ router.delete('/users/me/avatar', auth, async (req, res) => {
     res.send(req.user)
 })
 
-router.get('/users/:id/avatar', async (req, res) => {
+router.get('/users/me/avatar', async (req, res) => {
     try{
         const user = await User.findById(req.params.id)
 
         if(!user || !user.avatar){
-            throw new Error()
+            throw new Error("Avatar not found")
         }
 
         res.set('Content-Type', 'image/png')
         res.send(user.avatar)
     }catch(e){
-        res.status(404).send()
+        res.status(404).send(e.message)
     }
 })
 
